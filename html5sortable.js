@@ -3,10 +3,10 @@
  * Based on
  * http://farhadi.ir/projects/html5sortable
  *
- * Modified for jquery.event.drag compatibility by ssafejava, 2013
+ * Modified for jquery.event.drag compatibility by Samuel Reed, 2013
  *
- * Original Copyright 2012, Ali Farhadi
- * Both releases under the MIT license.
+ * Copyright 2012, Ali Farhadi
+ * Released under the MIT license.
  */
 (function($) {
 'use strict';
@@ -39,7 +39,8 @@ $.fn.sortable = function(options) {
       // Not really sure if this works with $.event.drag plugin
       if (method == 'destroy') {
         items.add(this).removeData('items')
-          .off('dragstart.h5s dragend.h5s selectstart.h5s dragover.h5s dragenter.h5s drop.h5s');
+          .off('.sortable');
+        $(this).find('.sortable-placeholder').remove();
       }
       return;
     }
@@ -50,12 +51,14 @@ $.fn.sortable = function(options) {
 
     // Create placeholder
     var placeholder = $('<' + (/^ul|ol$/i.test(this.tagName) ? 'li' : 'div') + ' class="sortable-placeholder">');
+
+    // Cache items config so we can remove draggability later on
     $(this).data('items', options.items);
 
     // Configure items!
     items.attr('draggable', 'true')
     // Start dragging
-    .drag('start.h5s', function(e, dd) {
+    .drag('start.sortable', function(e, dd) {
       if ($(this).attr('draggable') != 'true') return; // allows 'disable' to work.
       // Cache ref for speed.
       dragging = $(this);
@@ -78,7 +81,8 @@ $.fn.sortable = function(options) {
       dragging.before(placeholder);
     })
     // Drag continuation (swapping)
-    .drag(function(e, dd) {
+    .drag('.sortable', function(e, dd) {
+      dragging = $(this);
 
       // Move this item
       var cssProps = $.extend({}, draggingCSS);
@@ -115,7 +119,9 @@ $.fn.sortable = function(options) {
       });
     })
     // End dragging
-    .drag('end.h5s', function(e, dd) {
+    .drag('end.sortable', function(e, dd) {
+      dragging = $(this);
+
       // Trigger events
       parent.trigger('sortend', {item: dragging});
 
