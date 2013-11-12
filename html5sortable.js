@@ -13,13 +13,16 @@
 
 $.fn.sortable = function(options) {
   var method = String(options), previousEvent = {}, dragging;
-  options = $.extend({ mode: 'horizontal' }, options);
-
-  // Default css props on items we're dragging
-  var draggingCSS = {
-    'z-index': 10,
-    position: 'absolute'
+  var defaults = {
+    // Dragging mode - values: 'horizontal', 'vertical'
+    mode: 'horizontal',
+    // Default css props on items we're dragging
+    draggingCSS: {
+      'z-index': 100,
+      position: 'absolute'
+    }
   };
+  options = $.extend(defaults, options);
 
   // Configure horizontal/vertical modes. Default is vertical.
   var props;
@@ -46,7 +49,7 @@ $.fn.sortable = function(options) {
     }
 
     // Store some refs
-    var startIndex, parent = $(this), parentOffset = parent.offset();
+    var startIndex, parent = $(this), parentOffset = parent.offset(), originalStyle;
     items = $(this).children(options.items);
 
     // Create placeholder
@@ -68,7 +71,8 @@ $.fn.sortable = function(options) {
       parent.trigger('sortstart', {item: dragging});
 
       // Take this item out the flow (pos:a) and position it.
-      var cssProps = $.extend({}, draggingCSS);
+      var originalStyle = dragging.attr('style');
+      var cssProps = $.extend({}, options.draggingCSS);
       cssProps[props.position] = dd[props.offset] - parentOffset[props.position];
       cssProps.width = dragging.width() + 'px'; // ensure width (block lvl element)
       dragging.addClass('sortable-dragging').css(cssProps);
@@ -85,7 +89,7 @@ $.fn.sortable = function(options) {
       dragging = $(this);
 
       // Move this item
-      var cssProps = $.extend({}, draggingCSS);
+      var cssProps = $.extend({}, options.draggingCSS);
       cssProps[props.position] = dd[props.offset] - parentOffset[props.position];
       dragging.addClass('sortable-dragging').css(cssProps);
 
@@ -127,7 +131,10 @@ $.fn.sortable = function(options) {
 
       // Insert item into correct position.
       placeholder.before(dragging).detach();
-      dragging.removeClass('sortable-dragging').css({left: '', 'z-index': '', position: '', top: '', width: ''});
+      dragging
+        .removeClass('sortable-dragging')
+        .css({left: '', 'z-index': '', position: '', top: '', width: ''})
+        .attr('style', originalStyle);
 
       // Trigger sortupdate, if it occurred.
       if (startIndex != dragging.index()) {
